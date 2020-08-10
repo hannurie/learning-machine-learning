@@ -1,0 +1,35 @@
+import pandas as pd
+import numpy as np
+import requests
+from bs4 import BeautifulSoup
+import time
+import random
+
+url = "https://www.koreabaseball.com/Record/Player/PitcherDetail/Basic.aspx?playerId={}"
+idxes = range(70000, 80000)
+
+idxes2 = []
+all_player_info2 = []
+for idx in idxes:
+    resp = requests.get(url.format(idx))
+    soup = BeautifulSoup(resp.text, "html5lib")
+    
+    lis = soup.select("div.player_basic ul li")
+    player_info = {}
+    for li in lis:
+        c = li.select_one('strong').get_text()
+        v = li.select_one('span').get_text()
+        if "선수명" in c and v == '':
+            player_info = None
+            break
+
+        player_info[c] = v if v != '' else None
+
+    if player_info != None:
+        all_player_info2.append(player_info)
+        idxes2.append(idx)
+
+    dataframe = pd.DataFrame(all_player_info2, index=idxes2)
+    dataframe.to_csv("player_data_70000.csv")
+
+    time.sleep(random.uniform(0.2, 0.5))
