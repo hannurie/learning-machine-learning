@@ -1,0 +1,1 @@
+corona_date['월'] = [ int(x[0].replace('월', '')) for x in corona_date[1].str.split() ]
