@@ -1,0 +1,26 @@
+url = "http://www.statiz.co.kr/player.php?opt=1&name={0}&birth={1}"
+ids = df['id']
+ids = np.array(ids)
+
+for a, b, c in df[['id', 'name', 'birth']].values:
+    r = requests.get(url.format(b, c))
+    html = r.text
+    soup = BeautifulSoup(html, 'html5lib') 
+    trs = soup.select("tbody tr")
+    p_id = a
+    print(p_id)
+    results = []
+    #SQL 입력구문
+    print(results)
+    for tr in trs:
+        tds = tr.select("td")    
+        for idx in ids:
+            result = [p_id]
+            if len(tds) == 32:
+                for td in tds:
+                    # print(span.get_text(), end=' ')
+                    result.append( td.get_text() )
+                print(result)
+                results.append( result )
+            time.sleep(0.5)
+    results = np.array(results)
