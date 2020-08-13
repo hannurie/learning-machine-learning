@@ -1,0 +1,85 @@
+# DB에 크롤링 자료 바로 저장하는 코드입니다.
+
+import numpy as np
+import pandas as pd
+import random
+
+import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from fake_useragent import UserAgent
+
+import time
+import csv
+import os
+import cx_Oracle
+
+df = pd.read_excel('p_info.xlsx')
+df.head()
+df.iloc[['id', 'name', 'birth']].values
+
+sql = """INSERT INTO PLAYER_RECORDS
+        (PLAYER_ID, PLAY_YEAR, TEAMNAME, AGE, CHULJANG, WANTOO, WANBONG, SUNBAL, SEUNG, PAE, SE, HOLD, ENING, SILJEUM, JACHAEK, TAJA, ANTA, ETA, SAMTA, HOMERUN, BALLNET, GOSA,
+        SAGU, SAMJIN, POKE, POKTOO, ERA, FIP, WHIP, ERA2, FIP2, WAR, WPA )
+        VALUES ( :PLAYER_ID, :PLAY_YEAR, :TEAMNAME, :AGE, :CHULJANG, :WANTOO, :WANBONG, :SUNBAL, :SEUNG, :PAE, :SE, :HOLD, :ENING, :SILJEUM, :JACHAEK, :TAJA, :ANTA, :ETA, :SAMTA, :HOMERUN,
+                 :BALLNET, :GOSA, :SAGU, :SAMJIN, :POKE, :POKTOO, :ERA, :FIP, :WHIP, :ERA2, :FIP2, :WAR, :WPA)
+      """
+
+connection = cx_Oracle.connect('hoseo', 'hoseo', 'localhost:1521/xe')
+cursor = connection.cursor()
+
+# 셀레니움 준비
+path = r'D:\data-analysis\dev-tools\chromedriver.exe'
+driver = webdriver.Chrome(executable_path=path)
+
+
+ids = df['id']
+ids = np.array(ids)
+
+results2 = []
+
+for a, b, c in df.iloc[1013: ][['id', 'name', 'birth']].values:
+    c = str(c)
+    c = c[:10]
+    print(a, b, c)
+    url = "http://www.statiz.co.kr/player.php?opt=1&name={}&birth={}"
+    driver.get(url.format(b, c))
+
+    #이상없음
+    html = driver.page_source
+    soup = BeautifulSoup(html, "html5lib")
+    trs = soup.select("tbody tr")
+    p_id = a
+    # print(p_id)
+    # print(trs)
+    time.sleep(0.5)
+
+    results = []
+    for tr in trs:
+        tds = tr.select("td")     
+        #for idx in range(ids):    
+        result = [a]
+        if len(tds) != 32:
+            pass
+        else:    
+            for td in tds:
+                # print(span.get_text(), end=' ')
+                result.append( td.text )                
+                # print(result)
+            results.append( result )
+            test_df1 = pd.DataFrame(result)
+            # 데이터 베이스 저장
+            cursor.execute(sql, result)
+            connection.commit()
+        # time.sleep(0.5)
+        # results_df = pd.DataFrame(results)
+        # results_df.to_excel("results.xlsx")
+    results = np.array(results)
+    results2.append(results)
+    print(results)
+results2 = np.array(results2)
+print(results2)
+
+cursor.close()
+connection.close()
+       
