@@ -1,0 +1,36 @@
+#DB 데이터 읽기
+conn = cx_Oracle.connect("hoseo", "hoseo", "localhost:1521/xe")
+cursor = conn.cursor()
+
+sql_s = """
+        SELECT *
+        FROM SALARY
+
+"""
+sql_i = """
+        SELECT *
+        FROM player_info
+
+"""
+sql_r = """
+        SELECT *
+        FROM records2
+
+"""
+
+
+s_data = pd.read_sql(sql_s, conn)
+i_data = pd.read_sql(sql_i, conn)
+r_data = pd.read_sql(sql_r, conn)
+
+conn.commit()
+cursor.close()
+conn.close()
+
+# 다른 컬럼명 변경
+s_data_df.rename(columns={"ID":"PLAYER_ID"}, inplace=True)
+
+
+# 데이터 합치기
+ind = s_data_df.PLAYER_ID.isin(r_data_df.PLAYER_ID) & r_data_df.PLAYER_ID.isin(s_data_df.PLAYER_ID)
+sr_data = s_data_df[ind].append(r_data_df[ind])
