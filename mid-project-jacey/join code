@@ -1,0 +1,3 @@
+ir_df = i_data_df.join(r_data_df.set_index('PLAYER_ID'), on='PLAYER_ID')
+
+기준데이터프레임.join(합쳐질 데이터프레임.set_index("기준"), on="기준)
